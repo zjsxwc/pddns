@@ -76,7 +76,7 @@ class FakeDNSQuery
 
 
     /**
-     * @param null|null $hostIp 本dns服务器的公网ip地址
+     * @param null|string $hostIp 本dns服务器的公网ip地址
      */
     public static function serve($hostIp = null)
     {
