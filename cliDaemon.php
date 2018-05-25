@@ -9,10 +9,10 @@
 
 include_once __DIR__ . "/FakeDNSQuery.php";
 
-
-$hostIp = readline("Current server host ip (default 127.0.0.1): ");
+$defaultHostIp = "192.168.1.122";
+$hostIp = readline("Current server host ip (default $defaultHostIp): ");
 if (!$hostIp) {
-    $hostIp = "127.0.0.1";
+    $hostIp = $defaultHostIp;
 }
 FakeDNSQuery::serve($hostIp);
 
