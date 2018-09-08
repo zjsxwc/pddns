@@ -12,6 +12,7 @@ class FakeDNSQuery
     private $data;
     /** @var array */
     private $fakeDnsIpMap;
+    private $fakeDnsKeywords;
     /** @var string */
     private $dominio;
 
@@ -19,11 +20,13 @@ class FakeDNSQuery
      * FakeDNSQuery constructor.
      * @param string $data
      * @param array $fakeDnsIpMap
+     * @param string[] $fakeDnsKeywords
      */
-    public function __construct($data, $fakeDnsIpMap)
+    public function __construct($data, $fakeDnsIpMap, $fakeDnsKeywords = [])
     {
         $this->data = $data;
         $this->fakeDnsIpMap = $fakeDnsIpMap;
+        $this->fakeDnsKeywords = $fakeDnsKeywords;
         $this->dominio = "";
         $tipo = (ord($data{2}) >> 3) & 15;
         if ($tipo == 0) {
@@ -36,12 +39,19 @@ class FakeDNSQuery
                 $lon = ord($data{$ini});
             }
         }
-        echo "get domain $this->dominio" .PHP_EOL;
+        echo "get domain $this->dominio" . PHP_EOL;
     }
 
     public function respuesta()
     {
         $domainName = substr($this->dominio, 0, -1);
+
+        foreach ($this->fakeDnsKeywords as $fakeDnsKeyword) {
+            if (strpos($domainName, $fakeDnsKeyword) !== false) {
+                $this->fakeDnsIpMap[$domainName] = "0.0.0.0";
+            }
+        }
+
         $isExistFakeDomainInMap = isset($this->fakeDnsIpMap[$domainName]);
 
         echo "try to fake $this->dominio ($domainName) \n";
@@ -87,21 +97,16 @@ class FakeDNSQuery
 
         socket_bind($udpSocket, $hostIp, 53);
 
-        $lastReloadTime = time();
+        $fakeDnsKeywords = ["weibo", "sina"];
         $fakeDnsIpMap = [];
-        while (1) {
-            //$fakeDnsIpMap 用于动态欺骗自定义域名与ip的绑定数组
-            if ((!$fakeDnsIpMap) || ((time() - $lastReloadTime) > 10 )  ) {
-                $fakeDnsIpMap = self::reloadFakeDnsIpMap();
-                var_dump($fakeDnsIpMap);
-                $lastReloadTime = time();
-            }
+//            $fakeDnsIpMap 用于动态欺骗自定义域名与ip的绑定数组
 //            $fakeDnsIpMap = [
 //                //..
 //                "www.fakewang22.com" => '14.215.177.38',
 //                //..
 //            ];
-            if (!$fakeDnsIpMap) {
+        while (1) {
+            if ((!$fakeDnsIpMap) && (!$fakeDnsKeywords)) {
                 continue;
             }
             echo sprintf("Server ip: %s for fakeDnsIpMap %s \n", $hostIp, json_encode($fakeDnsIpMap));
@@ -112,35 +117,12 @@ class FakeDNSQuery
             socket_recvfrom($udpSocket, $dnsQueryData, 1024, 0, $fromIp, $fromPort);
             echo "received udp data\n";
             //echo "from remote address $fromIp and remote port $fromPort" . PHP_EOL;
-            $dq = new self($dnsQueryData, $fakeDnsIpMap);
+            $dq = new self($dnsQueryData, $fakeDnsIpMap, $fakeDnsKeywords);
             $respuestaData = $dq->respuesta();
             if ($respuestaData) {
                 socket_sendto($udpSocket, $respuestaData, strlen($respuestaData), 0, $fromIp, $fromPort);
             }
         }
-    }
-
-    /**
-     * @return array
-     */
-    private static function reloadFakeDnsIpMap()
-    {
-        $isMetaDataExist = file_exists(__DIR__ . "/data.txt");
-        if (!$isMetaDataExist) {
-            echo "No data.txt \n";
-            return [];
-        } else {
-            $dataStr = file_get_contents(__DIR__ . "/data.txt");
-            if (!$dataStr) {
-                return [];
-            }
-            $fakeDnsIpMap = unserialize($dataStr);
-        }
-
-        if (empty($fakeDnsIpMap)) {
-            return [];
-        }
-        return $fakeDnsIpMap;
     }
 
 
