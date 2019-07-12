@@ -22,7 +22,7 @@ $fakeDnsIpMap = [
 
 
 $data = serialize($fakeDnsIpMap);
-if (file_put_contents('data.txt', $data)) {
+if (file_put_contents(__DIR__ . '/data.txt', $data)) {
     echo "OK";
 } else {
     echo "Fail";

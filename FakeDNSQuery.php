@@ -105,10 +105,16 @@ class FakeDNSQuery
 //                "www.fakewang22.com" => '14.215.177.38',
 //                //..
 //            ];
+
+        $dataFile = __DIR__ . '/data.txt';
         while (1) {
-            if ((!$fakeDnsIpMap) && (!$fakeDnsKeywords)) {
-                continue;
+            if (file_exists($dataFile)) {
+                $data = file_get_contents($dataFile);
+                if ($data) {
+                    $fakeDnsIpMap = unserialize($data);
+                }
             }
+
             echo sprintf("Server ip: %s for fakeDnsIpMap %s \n", $hostIp, json_encode($fakeDnsIpMap));
 
             $fromIp = '';
@@ -122,6 +128,7 @@ class FakeDNSQuery
             if ($respuestaData) {
                 socket_sendto($udpSocket, $respuestaData, strlen($respuestaData), 0, $fromIp, $fromPort);
             }
+            $dq = null;
         }
     }
 
