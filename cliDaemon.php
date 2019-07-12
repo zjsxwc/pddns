@@ -9,7 +9,18 @@
 
 include_once __DIR__ . "/FakeDNSQuery.php";
 
-$defaultHostIp = "192.168.1.122";
+$command="/sbin/ifconfig | grep 'inet ' | awk '{ print $2}'";
+$output = [];
+exec ($command, $output);
+$defaultHostIp = "0.0.0.0";
+foreach ($output as $perIp) {
+    echo $perIp."\n\n";
+    if (strpos($perIp, "192.") !== false) {
+        $defaultHostIp = $perIp;
+        break;
+    }
+}
+
 $hostIp = readline("Current server host ip (default $defaultHostIp): ");
 if (!$hostIp) {
     $hostIp = $defaultHostIp;
