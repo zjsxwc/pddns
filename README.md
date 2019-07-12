@@ -16,7 +16,7 @@
 
 ```
 
-1. 命令行 cli 运行 `sudo ./cliDaemon.php` 守护进程来作为dns服务器
+1. 命令行 cli 运行 `sudo php cliDaemon.php` 守护进程来作为dns服务器
 
 2. 家里的电脑浏览器访问`<公网dns服务器的ip>/index.php?fakeDomain=my-home-domain.com&ip=118.89.204.190`
 来更新我自己的假域名与家里变动ip的对应映射关系
